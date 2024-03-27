@@ -1,7 +1,6 @@
-# -*- coding: utf-8 -*
-import sys
 from contextlib import contextmanager
 from threading import local
+
 
 try:
     # Django > 1.10 uses MiddlewareMixin

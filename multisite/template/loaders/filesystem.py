@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*-
 import os
 
 from django.conf import settings
@@ -16,5 +15,4 @@ class Loader(FilesystemLoader):
         for tname in (os.path.join(domain, template_name),
                       os.path.join(default_dir, template_name)):
             args = [tname]
-            for item in super(Loader, self).get_template_sources(*args, **kwargs):
-                yield item
+            yield from super().get_template_sources(*args, **kwargs)

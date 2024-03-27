@@ -1,6 +1,5 @@
-# -*- coding: utf-8 -*-
-
 from .template.loaders.filesystem import Loader
+
 
 # The template.loaders.filesystem.Loader class used to live here. Now that
 # we have more than one Loader class in the project, they are defined in the

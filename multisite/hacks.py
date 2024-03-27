@@ -1,7 +1,7 @@
 import sys
 
 from django.conf import settings
-from django.db.models.signals import post_save, post_delete
+from django.db.models.signals import post_delete, post_save
 
 
 def use_framework_for_site_cache():
@@ -46,7 +46,7 @@ def SiteManager_get_site_by_id(self, site_id):
     return site
 
 
-class SiteCache(object):
+class SiteCache:
     """Wrapper for SITE_CACHE that assigns a key_prefix."""
 
     def __init__(self, cache=None):
@@ -67,7 +67,7 @@ class SiteCache(object):
         self._cache = cache
 
     def _get_cache_key(self, key):
-        return 'sites.%s.%s' % (self.key_prefix, key)
+        return f'sites.{self.key_prefix}.{key}'
 
     def _clean_site(self, site):
         # Force site.id to be an int, not a SiteID object.
@@ -105,7 +105,7 @@ class SiteCache(object):
         self.delete(key=instance.pk)
 
 
-class DictCache(object):
+class DictCache:
     """Add dictionary protocol to django.core.cache.backends.BaseCache."""
 
     def __init__(self, cache):

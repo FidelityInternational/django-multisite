@@ -1,21 +1,16 @@
-# -*- coding: utf-8 -*-
 import os
 import tempfile
+from hashlib import md5 as md5_constructor
 from urllib.parse import urlsplit, urlunsplit
 
-import django
 from django.conf import settings
-from django.contrib.sites.models import Site, SITE_CACHE
-from django.core.exceptions import DisallowedHost
+from django.contrib.sites.models import SITE_CACHE, Site
 from django.core import mail
 from django.core.cache import caches
-from django.core.exceptions import ImproperlyConfigured
-from django.urls import get_callable
-from django.db.models.signals import pre_save, post_delete, post_init
+from django.core.exceptions import DisallowedHost, ImproperlyConfigured
+from django.db.models.signals import post_delete, post_init, pre_save
 from django.http import Http404, HttpResponsePermanentRedirect
-
-from hashlib import md5 as md5_constructor
-
+from django.urls import get_callable
 from django.utils.deprecation import MiddlewareMixin
 
 from .models import Alias
@@ -37,16 +32,14 @@ class DynamicSiteMiddleware(MiddlewareMixin):
         )
 
         self.cache = caches[self.cache_alias]
-        post_init.connect(self.site_domain_cache_hook, sender=Site,
-                          dispatch_uid='multisite_post_init')
+        post_init.connect(self.site_domain_cache_hook, sender=Site, dispatch_uid='multisite_post_init')
         pre_save.connect(self.site_domain_changed_hook, sender=Site)
         post_delete.connect(self.site_deleted_hook, sender=Site)
 
     def get_cache_key(self, netloc):
         """Returns a cache key based on ``netloc``."""
         netloc = md5_constructor(netloc.encode('utf-8'))
-        return 'multisite.alias.%s.%s' % (self.key_prefix,
-                                          netloc.hexdigest())
+        return 'multisite.alias.{}.{}'.format(self.key_prefix, netloc.hexdigest())
 
     def netloc_parse(self, netloc):
         """
@@ -124,12 +117,6 @@ class DynamicSiteMiddleware(MiddlewareMixin):
         else:
             try:
                 view = get_callable(fallback)
-                if django.VERSION < (1,8):
-                    # older django's get_callable falls through on error,
-                    # returning the input as output
-                    # which notably is definitely not a callable here
-                    if not callable(view):
-                        raise ImportError()
             except ImportError:
                 # newer django forces this to be an error, which is tidier.
                 # we rewrite the error to be a bit more helpful to our users.
