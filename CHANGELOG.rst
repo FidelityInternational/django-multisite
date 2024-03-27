@@ -2,6 +2,11 @@
 Release Notes
 =============
 
+Unreleased
+==========
+* Introduced Django 4.2 support.
+* Dropped Support for Django<3.1
+
 1.9.0
 -----
 
