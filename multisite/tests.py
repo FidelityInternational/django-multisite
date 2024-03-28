@@ -206,12 +206,12 @@ class DynamicSiteMiddlewareTest(TestCase):
         """
         Test that the middleware loads and runs properly under settings.MIDDLEWARE.
         """
-        resp = self.client.get('/domain/', headers={"host": self.host})
+        resp = self.client.get('/domain/', HTTP_HOST=self.host)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, self.site.domain)
         self.assertEqual(settings.SITE_ID, self.site.pk)
 
-        resp = self.client.get('/domain/', headers={"host": self.site2.domain})
+        resp = self.client.get('/domain/', HTTP_HOST=self.site2.domain)
         self.assertEqual(resp.status_code, 200)
         self.assertContains(resp, self.site2.domain)
         self.assertEqual(settings.SITE_ID, self.site2.pk)
