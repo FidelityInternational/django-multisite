@@ -4,6 +4,9 @@ Release Notes
 
 Unreleased
 ==========
+
+1.10.0
+-----
 * Introduced Django 4.2 support.
 * Dropped Support for Django<3.1
 
