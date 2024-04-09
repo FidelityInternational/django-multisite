@@ -1,4 +1,3 @@
-# -*- coding: utf-8 -*
 from django.contrib.sites import managers
 from django.core.exceptions import FieldDoesNotExist
 from django.db import models

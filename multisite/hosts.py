@@ -1,4 +1,4 @@
-from django.utils.functional import empty, SimpleLazyObject
+from django.utils.functional import SimpleLazyObject, empty
 
 
 __ALL__ = ('ALLOWED_HOSTS', 'AllowedHosts')
@@ -16,7 +16,7 @@ class IterableLazyObject(SimpleLazyObject):
         return self._wrapped.__iter__()
 
 
-class AllowedHosts(object):
+class AllowedHosts:
 
     alias_model = None
 

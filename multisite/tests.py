@@ -9,17 +9,12 @@ from the parent directory.
 
 This file uses relative imports and so cannot be run standalone.
 """
-import django
 import logging
 import os
-import pytest
 import sys
 import tempfile
-
 from io import StringIO
 from unittest import mock, skipUnless
-
-from django.urls import re_path
 
 from django.apps import apps
 from django.conf import settings
@@ -30,6 +25,9 @@ from django.http import Http404, HttpResponse
 from django.template.loader import get_template
 from django.test import TestCase, override_settings
 from django.test.client import RequestFactory as DjangoRequestFactory
+from django.urls import path
+
+import pytest
 
 from multisite import SiteDomain, SiteID
 
@@ -41,14 +39,14 @@ from .models import Alias
 
 class RequestFactory(DjangoRequestFactory):
     def __init__(self, host):
-        super(RequestFactory, self).__init__()
+        super().__init__()
         self.host = host
 
     def get(self, path, data={}, host=None, **extra):
         if host is None:
             host = self.host
-        return super(RequestFactory, self).get(path=path, data=data,
-                                               HTTP_HOST=host, **extra)
+        return super().get(path=path, data=data, HTTP_HOST=host, **extra)
+
 
 @pytest.mark.django_db
 @skipUnless(apps.is_installed("django.contrib.sites"),
@@ -68,19 +66,21 @@ class TestContribSite(TestCase):
         self.assertEqual(current_site, self.site)
         self.assertEqual(current_site.id, settings.SITE_ID)
 
+
 # Because we are a middleware package, we have no views available to test with easily
 # So create one:
 # (This is only used by test_integration)
 urlpatterns = [
-    re_path(r'^domain/$', lambda request, *args, **kwargs: HttpResponse(str(Site.objects.get_current())))
+    path('domain/', lambda request, *args, **kwargs: HttpResponse(str(Site.objects.get_current())))
 ]
+
 
 @pytest.mark.django_db
 @skipUnless(apps.is_installed("django.contrib.sites"),
             'django.contrib.sites is not in settings.INSTALLED_APPS')
 @override_settings(
     ALLOWED_SITES=['*'],
-    ROOT_URLCONF=__name__, #this means that urlpatterns above is used when .get() is called below.
+    ROOT_URLCONF=__name__,  # this means that urlpatterns above is used when .get() is called below.
     SITE_ID=SiteID(default=0),
     CACHE_MULTISITE_ALIAS='multisite',
     CACHES={
@@ -357,13 +357,13 @@ class SiteCacheTest(TestCase):
         self.assertEqual(Site.objects.get_current(), self.site)
         self.assertEqual(self.cache[self.site.id], self.site)
         self.assertEqual(self.cache.get(key=self.site.id), self.site)
-        self.assertEqual(self.cache.get(key=-1), None) # Site doesn't exist
-        self.assertEqual(self.cache.get(-1, 'Default'), 'Default') # Site doesn't exist
-        self.assertEqual(self.cache.get(key=-1, default='Non-existant'), 'Non-existant') # Site doesn't exist
+        self.assertEqual(self.cache.get(key=-1), None)  # Site doesn't exist
+        self.assertEqual(self.cache.get(-1, 'Default'), 'Default')  # Site doesn't exist
+        self.assertEqual(self.cache.get(key=-1, default='Non-existant'), 'Non-existant')  # Site doesn't exist
         self.assertEqual(
-            'Non-existant', 
+            'Non-existant',
             self.cache.get(self.site.id, default='Non-existant', version=100)
-        ) # Wrong key version 3
+        )  # Wrong key version 3
         # Clear cache
         self.cache.clear()
         self.assertRaises(KeyError, self.cache.__getitem__, self.site.id)
@@ -428,7 +428,7 @@ class SiteCacheTest(TestCase):
         self.assertEqual(self.cache[self.site.id], self.site)
         self.assertEqual(
             self.cache._cache._get_cache_key(self.site.id),
-            "sites.looselycoupled.{}".format(self.site.id)
+            f"sites.looselycoupled.{self.site.id}"
         )
 
     @override_settings(
@@ -441,7 +441,7 @@ class SiteCacheTest(TestCase):
         self.assertEqual(self.cache[self.site.id], self.site)
         self.assertEqual(
             self.cache._cache._get_cache_key(self.site.id),
-            "sites.virtuouslyvirtual.{}".format(self.site.id)
+            f"sites.virtuouslyvirtual.{self.site.id}"
         )
 
 
@@ -547,7 +547,7 @@ class AliasTest(TestCase):
         Site.objects.all().delete()
 
     def test_create(self):
-        site0 = Site.objects.create()
+        site0 = Site.objects.create()  # noqa: F841
         site1 = Site.objects.create(domain='1.example')
         site2 = Site.objects.create(domain='2.example')
         # Missing site
@@ -595,7 +595,7 @@ class AliasTest(TestCase):
         site = Site.objects.create(domain='example.com')
         self.assertEqual(
             repr(Alias.objects.get(site=site)),
-            u'<Alias: %(domain)s -> %(domain)s>' % site.__dict__
+            '<Alias: %(domain)s -> %(domain)s>' % site.__dict__
         )
 
     def test_managers(self):
@@ -603,15 +603,15 @@ class AliasTest(TestCase):
         Alias.objects.create(site=site, domain='example.org')
         self.assertEqual(
             set(Alias.objects.values_list('domain', flat=True)),
-            set(['example.com', 'example.org'])
+            {'example.com', 'example.org'}
         )
         self.assertEqual(
             set(Alias.canonical.values_list('domain', flat=True)),
-            set(['example.com'])
+            {'example.com'}
         )
         self.assertEqual(
             set(Alias.aliases.values_list('domain', flat=True)),
-            set(['example.org'])
+            {'example.org'}
         )
 
     def test_sync_many(self):
@@ -624,7 +624,7 @@ class AliasTest(TestCase):
         site3.save_base(raw=True)
         self.assertEqual(
             set(Alias.objects.values_list('domain', flat=True)),
-            set([site1.domain, site2.domain])
+            {site1.domain, site2.domain}
         )
         # Sync existing
         site1.domain = '1.example.org'
@@ -634,7 +634,7 @@ class AliasTest(TestCase):
         Alias.canonical.sync_many()
         self.assertEqual(
             set(Alias.objects.values_list('domain', flat=True)),
-            set([site1.domain, site2.domain])
+            {site1.domain, site2.domain}
         )
         # Sync with filter
         site1.domain = '1.example.net'
@@ -644,7 +644,7 @@ class AliasTest(TestCase):
         Alias.canonical.sync_many(site__domain=site1.domain)
         self.assertEqual(
             set(Alias.objects.values_list('domain', flat=True)),
-            set([site1.domain, '2.example.org'])
+            {site1.domain, '2.example.org'}
         )
 
     def test_sync_missing(self):
@@ -660,7 +660,7 @@ class AliasTest(TestCase):
         Alias.canonical.sync_missing()
         self.assertEqual(
             set(Alias.objects.values_list('domain', flat=True)),
-            set(['1.example.com', site2.domain])
+            {'1.example.com', site2.domain}
         )
 
     def test_sync_all(self):
@@ -676,7 +676,7 @@ class AliasTest(TestCase):
         Alias.canonical.sync_all()
         self.assertEqual(
             set(Alias.objects.values_list('domain', flat=True)),
-            set([site1.domain, site2.domain])
+            {site1.domain, site2.domain}
         )
 
     def test_sync(self):
@@ -789,7 +789,6 @@ class AliasTest(TestCase):
         alias = Alias.objects.create(site=site, domain='*')
         self.assertEqual(Alias.objects.resolve('example.net'),
                          alias)
-
 
 
 @pytest.mark.django_db
@@ -1009,28 +1008,21 @@ class TestCookieDomainMiddleware(TestCase):
             self.assertEqual(cookies['a']['domain'], '.extrahost.com')
 
 
-if django.VERSION < (1, 8):
-    TEMPLATE_SETTINGS = {
-        'TEMPLATE_LOADERS': ['multisite.template.loaders.filesystem.Loader'],
-        'TEMPLATE_DIRS': [os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                                  'test_templates')]
+TEMPLATE_SETTINGS = {'TEMPLATES': [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [
+            os.path.join(os.path.abspath(os.path.dirname(__file__)),
+                         'test_templates')
+        ],
+        'OPTIONS': {
+            'loaders': [
+                'multisite.template.loaders.filesystem.Loader',
+            ]
+        },
     }
-else:
-    TEMPLATE_SETTINGS = {'TEMPLATES':[
-        {
-            'BACKEND': 'django.template.backends.django.DjangoTemplates',
-            'DIRS': [
-                os.path.join(os.path.abspath(os.path.dirname(__file__)),
-                             'test_templates')
-            ],
-            'OPTIONS': {
-                'loaders': [
-                    'multisite.template.loaders.filesystem.Loader',
-                ]
-            },
-        }
-    ]
-    }
+]
+}
 
 
 @override_settings(
@@ -1106,6 +1098,6 @@ class UpdatePublicSuffixListCommandTestCase(TestCase):
         self.tldextract().update.side_effect = self.tldextract_update_side_effect
 
         call_command('update_public_suffix_list', verbosity=3)
-        update_message = 'Updating {}'.format(self.cache_file)
+        update_message = f'Updating {self.cache_file}'
         self.assertIn(update_message, self.out.getvalue())
         self.assertIn('TLDExtract.update called', self.out.getvalue())
