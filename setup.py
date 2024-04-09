@@ -25,7 +25,7 @@ with open(os.path.join(here, "multisite", "__version__.py")) as f:
 
 files = ["multisite/test_templates/*"]
 
-setup(name='django-multisite',
+setup(name='django-multisite-fil',
       version=version['__version__'],
       description='Serve multiple sites from a single Django application',
       long_description=long_description(),
