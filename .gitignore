@@ -10,6 +10,7 @@ django_multisite.egg-info/
 dist
 downloads
 eggs
+*.egg-info
 parts
 MANIFEST
 multisite/*.egg-info

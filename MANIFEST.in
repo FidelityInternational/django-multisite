@@ -1,3 +1,9 @@
-include INSTALL.txt
+include LICENSE
 include README.rst
-graft multisite
+include CHANGELOG.rst
+recursive-include */management *
+recursive-include */migrations *
+recursive-include */test_templates *
+recursive-include */templates *
+
+recursive-exclude * *.pyc
